@@ -4,9 +4,9 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "node index.js",
+        "dev": "NODE_ENV=development node index.js",
         "build": "next build",
-        "start": "next start",
+        "start": "NODE_ENV=production node index.js",
         "test": "exit 0"
     },
     "keywords": [],
