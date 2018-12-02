@@ -1,5 +1,6 @@
 import React from 'react';
 import fetch from 'isomorphic-unfetch';
+import Head from 'next/head';
 
 class Home extends React.Component {
     state = {};
@@ -52,9 +53,22 @@ class Home extends React.Component {
             ? this.state.data.associations_array
             : this.props.data.associations_array;
 
+        const randomIndex = Math.floor(Math.random() * 6) + 1;
+
+        console.log(randomIndex);
+
         return (
             <div>
-                <h1 onClick={() => this.handleFetchNewWord(associations_array[0])}>
+                <Head>
+                    <meta
+                        name="viewport"
+                        content="width=device-width, initial-scale=1, minimal-ui"
+                    />
+                </Head>
+                <h1
+                    onClick={() =>
+                        this.handleFetchNewWord(associations_array[randomIndex])
+                    }>
                     {entry}
                 </h1>
                 <div>
