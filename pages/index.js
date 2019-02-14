@@ -2,10 +2,31 @@ import React from 'react';
 import fetch from 'isomorphic-unfetch';
 import Head from 'next/head';
 
+const colors = ['red', 'yellow', 'blue', 'green', 'orange', 'purple', 'brown'];
+
 class Home extends React.Component {
 	state = {};
 	static async getInitialProps() {
-		const response = await fetch(
+		const max = 90;
+		const randomNumber = Math.floor(Math.random() * 7);
+		const randomIndex = Math.floor(Math.random() * max);
+
+		const initalWordResponse = await fetch(
+			`https://api.datamuse.com/words?rel_jja=${
+				colors[randomNumber]
+			}&max=${max}`,
+			{
+				method: 'GET',
+				headers: {
+					Host: 'api.datamuse.com',
+					Accept: '*/*'
+				}
+			}
+		);
+		const initalWordData = await initalWordResponse.json();
+		const randomWord = initalWordData[randomIndex].word;
+
+		const assocationResponse = await fetch(
 			'https://twinword-word-associations-v1.p.mashape.com/associations/',
 			{
 				method: 'POST',
@@ -15,13 +36,41 @@ class Home extends React.Component {
 					'X-Mashape-Key':
 						'CYWBFQhyPJmshd94bPIfbDONvZ97p1WOBF9jsnt0IvwOTf5jvG'
 				},
-				body: 'entry=dog'
+				body: `entry=${randomWord}`
 			}
 		);
 
-		const data = await response.json();
+		let randomNouns = [];
+		const associationsData = await assocationResponse.json();
+		randomNouns = [...associationsData.associations_array.slice(0, 2)];
 
-		return { data };
+		const nouns2 = await fetch(
+			`https://api.datamuse.com/words?rel_jja=${randomWord}&max=10`,
+			{
+				method: 'GET',
+				headers: {
+					Host: 'api.datamuse.com',
+					Accept: '*/*'
+				}
+			}
+		);
+		const nouns2Data = await nouns2.json();
+
+		if (nouns2Data.length >= 4) {
+			randomNouns = [
+				...randomNouns,
+				...nouns2Data.slice(0, 5).map(obj => obj.word)
+			];
+		} else {
+			randomNouns = [
+				...randomNouns,
+				...associationsData.associations_array.slice(3, 8)
+			];
+		}
+
+		console.log('nouns 2', nouns2Data.length);
+
+		return { randomWord, randomNouns };
 	}
 
 	handleFetchNewWord = async word => {
@@ -50,37 +99,14 @@ class Home extends React.Component {
 	};
 
 	render() {
-		const entry = this.state.data
-			? this.state.data.entry
-			: this.props.data.entry;
-		const associations_array = this.state.data
-			? this.state.data.associations_array
-			: this.props.data.associations_array;
-
-		const randomIndex = Math.floor(Math.random() * 6) + 1;
-
-		console.log(randomIndex);
-
+		console.log(this.props);
 		return (
 			<div>
-				<Head>
-					<meta
-						name='viewport'
-						content='width=device-width, initial-scale=1, minimal-ui'
-					/>
-				</Head>
-				<h1
-					onClick={() =>
-						this.handleFetchNewWord(associations_array[randomIndex])
-					}
-				>
-					{'word ' + entry}
-				</h1>
-				<div>
-					{associations_array.slice(0, 6).map(word => {
-						return <div key={word}>{word}</div>;
-					})}
-				</div>
+				<h1>{this.props.randomWord}</h1>
+				<div style={{ borderBottom: '2px solid coral' }} />
+				{this.props.randomNouns.map(noun => {
+					return <h2 key={noun}>{noun}</h2>;
+				})}
 			</div>
 		);
 	}
